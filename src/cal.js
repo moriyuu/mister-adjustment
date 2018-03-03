@@ -34,14 +34,12 @@ const initClient = () => {
       scope: SCOPES
     })
     .then(() => {
-      console.log("クズ");
       // Listen for sign-in state changes.
       gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
 
       // Handle the initial sign-in state.
       updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-    })
-    .catch(err => console.log("まじ無理", err));
+    });
 };
 
 /**
@@ -49,7 +47,6 @@ const initClient = () => {
  *  appropriately. After a sign-in, the API is called.
  */
 const updateSigninStatus = isSignedIn => {
-  console.log("isSignedIn ? ", isSignedIn);
   if (isSignedIn) {
     // authorizeButton.style.display = "none";
     // signoutButton.style.display = "block";
@@ -64,12 +61,9 @@ const updateSigninStatus = isSignedIn => {
  *  Sign in the user upon button click.
  */
 export const handleAuthClick = event => {
-  console.log("handleAuthClick", gapi);
   gapi.auth2
     .getAuthInstance()
-    .signIn()
-    .then(() => console.log("SIGNED IN!"))
-    .catch(err => console.log("SIGNED IN に失敗", err));
+    .signIn();
 };
 
 /**
@@ -106,18 +100,32 @@ const listUpcomingEvents = () => {
       maxResults: 10,
       orderBy: "startTime"
     })
-    .then(function(response) {
-      const events = response.result.items;
+    .then(res => {
+      console.log(res.result)
+      const events = res.result.items;
       appendPre("Upcoming events:");
 
       if (events.length > 0) {
         for (let i = 0; i < events.length; i++) {
           const event = events[i];
-          let when = event.start.dateTime;
-          if (!when) {
-            when = event.start.date;
+          let startDateTime = event.start.dateTime;
+          let endDateTime = event.end.dateTime;
+          let month, day, hour, min;
+          if (startDateTime) {
+            month = startDateTime.substr(5, 2);
+            day = startDateTime.substr(8, 2);
+            hour = startDateTime.substr(11, 2);
+            min = startDateTime.substr(14, 2);
+            startDateTime = `${month}/${day} ${hour}:${min}`;
+            month = endDateTime.substr(5, 2);
+            day = endDateTime.substr(8, 2);
+            hour = endDateTime.substr(11, 2);
+            min = endDateTime.substr(14, 2);
+            endDateTime = `${month}/${day} ${hour}:${min}`;
+            appendPre(event.summary + " ( " + startDateTime + " ~ " + endDateTime + " )");
+          } else {
+            startDateTime = event.start.date;
           }
-          appendPre(event.summary + " (" + when + ")");
         }
       } else {
         appendPre("No upcoming events found.");
