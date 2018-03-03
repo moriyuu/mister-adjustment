@@ -18,61 +18,94 @@ const Nav = styled.nav`
 const Jumbotron = styled.div`
   background-color: ${StyleVariables.color.gray.light};
 `;
+const Table = styled.table`
+  td {
+    &:hover {
+      background-color: #e3e2e1;
+      cursor: pointer;
+    }
+  }
+`;
+
+const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 class CalendarInput extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      days: [],
+      frames: [{ start: new Date(), end: new Date() }]
+    };
+    this.getRecentDays = this.getRecentDays.bind(this);
+    this.getAvailableTimeFrames = this.getAvailableTimeFrames.bind(this);
+  }
+
   componentDidMount() {
-    // 明日からの7日ぶんを取得して week に突っ込む
-    const week = [];
-    for (let i = 0; i < 7; i++) {
+    this.getRecentDays();
+    this.getAvailableTimeFrames(
+      30,
+      new Date(new Date(new Date().setHours(10)).setMinutes(0)),
+      new Date(new Date(new Date().setHours(20)).setMinutes(30))
+    );
+  }
+
+  /**
+   * 明日からの n 日ぶんを取得して days に突っ込む
+   * @param {number} n : 直近の日をn日ぶん
+   */
+  getRecentDays(n = 7) {
+    const days = [];
+    for (let i = 0; i < n; i++) {
       const now = new Date();
       const day = new Date(now.setDate(now.getDate() + (i + 1)));
-      week.push(day);
+      days.push(day);
       // console.log(day.getMonth()+1 + "/" + day.getDate());
     }
-    // console.log(week)
+    this.setState({ days });
   }
-  
+
+  /**
+   * startTime と endTime から、予約可能なフレームを用意する
+   * @param {number} n : n分を1フレームとする
+   * @param {date} startTime : 時刻をみるために date 型
+   * @param {date} endTime : 時刻をみるために date 型
+   */
+  getAvailableTimeFrames(n, startTime, endTime) {
+    const frames = [];
+    while (startTime < endTime) {
+      frames.push({
+        start: new Date(startTime.getTime()),
+        end: new Date(startTime.setMinutes(startTime.getMinutes() + n))
+      });
+    }
+    this.setState({ frames });
+  }
+
   render() {
+    const { days, frames } = this.state;
     return (
-      <table className="table table-hover" style={{ margin: "0 auto" }}>
+      <Table className="table">
         <thead>
           <tr>
-            <th scope="col">03/11</th>
+            {days.map((day, index) => (
+              <th scope="col">{`${day.getMonth() + 1}/${day.getDate()} ${
+                daysOfWeek[day.getDay()]
+              }`}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>10:00 - 10:30</td>
-          </tr>
-          <tr>
-            <td>10:30 - 11:00</td>
-          </tr>
-          <tr>
-            <td>10:00 - 10:30</td>
-          </tr>
-          <tr>
-            <td>10:00 - 10:30</td>
-          </tr>
-          <tr>
-            <td>10:00 - 10:30</td>
-          </tr>
-          <tr>
-            <td>10:00 - 10:30</td>
-          </tr>
-          <tr>
-            <td>10:00 - 10:30</td>
-          </tr>
-          <tr>
-            <td>10:00 - 10:30</td>
-          </tr>
-          <tr>
-            <td>10:00 - 10:30</td>
-          </tr>
-          <tr>
-            <td>10:00 - 10:30</td>
-          </tr>
+          {frames.map((f, frameIndex) => (
+            <tr>
+              {days.map((day, dayIndex) => (
+                <td>{`${f.start.getHours()}:${
+                  f.start.getMinutes() ? f.start.getMinutes() : "00"
+                } -`}</td>
+              ))}
+            </tr>
+          ))}
         </tbody>
-      </table>
+      </Table>
     );
   }
 }
@@ -123,7 +156,9 @@ class App extends Component {
             margin: "0 auto"
           }}
         />
-        <CalendarInput />
+        <div className="container">
+          <CalendarInput />
+        </div>
       </AppStyledDiv>
     );
   }

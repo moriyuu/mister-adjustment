@@ -7,7 +7,7 @@ const AppStyledDiv = styled.div`
     border-color: ${StyleVariables.color.orange.light};
     &:active {
       background-color: ${StyleVariables.color.orange.veryDark} !important;
-      border-color: ${StyleVariables.color.orange.light} !important;
+      border-color: ${StyleVariables.color.orange.veryDark} !important;
     }
     &:focus {
       box-shadow: none !important;
