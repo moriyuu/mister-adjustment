@@ -1,10 +1,16 @@
 import React, { Component } from "react";
+import gapi from "gapi-client";
 import styled from "styled-components";
 import "./App.css";
 import AppStyledDiv from "./App.style.js";
 import StyleVariables from "./components/_styleVariables";
 
-import { handleAuthClick, handleSignoutClick } from "./cal";
+import {
+  handleAuthClick,
+  handleSignoutClick,
+  handleClientLoad,
+  listUpcomingEvents
+} from "./cal";
 
 const Nav = styled.nav`
   background-color: rgba(255, 67, 48, 0.88) !important;
@@ -84,7 +90,7 @@ class CalendarInput extends Component {
   render() {
     const { days, frames } = this.state;
     return (
-      <Table className="table">
+      <Table className="table table-sm">
         <thead>
           <tr>
             {days.map((d, index) => (
@@ -110,20 +116,40 @@ class CalendarInput extends Component {
 }
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { isSignedIn: false, events: [] };
+
+    handleClientLoad(obj => {
+      console.log("setstateしちゃうよ", obj);
+      this.setState(obj);
+    });
+  }
+
+  async componentDidUpdate() {
+    const { isSignedIn, events } = this.state;
+    if (isSignedIn && !events.length) {
+      listUpcomingEvents().then(res => this.setState({ events: res }));
+    }
+  }
+
   render() {
+    const { isSignedIn } = this.state;
     return (
       <AppStyledDiv className="App">
         <Nav className="navbar sticky-top navbar-light bg-light">
           <div className="container">
             <a className="navbar-brand" href="#">
-              Mr.
+              Mr. A
             </a>
             <ul className="navbar-nav my-2 my-lg-0">
-              <li className="nav-item active">
-                <a className="nav-link" href="#" onClick={handleSignoutClick}>
-                  Logout
-                </a>
-              </li>
+              {isSignedIn && (
+                <li className="nav-item active">
+                  <a className="nav-link" href="#" onClick={handleSignoutClick}>
+                    Logout
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
         </Nav>

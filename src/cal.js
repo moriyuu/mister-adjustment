@@ -17,15 +17,17 @@ const SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
 /**
  *  On load, called to load the auth2 library and API client library.
  */
-export const handleClientLoad = () => {
-  gapi.load("client:auth2", initClient);
+export const handleClientLoad = callback => {
+  gapi.load("client:auth2", () => {
+    initClient(callback);
+  });
 };
 
 /**
  *  Initializes the API client library and sets up sign-in state
  *  listeners.
  */
-const initClient = () => {
+const initClient = callback => {
   gapi.client
     .init({
       apiKey: API_KEY,
@@ -35,10 +37,12 @@ const initClient = () => {
     })
     .then(() => {
       // Listen for sign-in state changes.
-      gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+      gapi.auth2.getAuthInstance().isSignedIn.listen(res => {
+        callback({ isSignedIn: res });
+      });
 
       // Handle the initial sign-in state.
-      updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+      callback({ isSignedIn: gapi.auth2.getAuthInstance().isSignedIn.get() });
     });
 };
 
@@ -46,16 +50,17 @@ const initClient = () => {
  *  Called when the signed in status changes, to update the UI
  *  appropriately. After a sign-in, the API is called.
  */
-const updateSigninStatus = isSignedIn => {
-  if (isSignedIn) {
-    // authorizeButton.style.display = "none";
-    // signoutButton.style.display = "block";
-    listUpcomingEvents();
-  } else {
-    // authorizeButton.style.display = "block";
-    // signoutButton.style.display = "none";
-  }
-};
+// export const updateSigninStatus = isSignedIn => {
+//   if (isSignedIn) {
+//     console.log("サインインした！");
+//     // authorizeButton.style.display = "none";
+//     // signoutButton.style.display = "block";
+//     listUpcomingEvents();
+//   } else {
+//     // authorizeButton.style.display = "block";
+//     // signoutButton.style.display = "none";
+//   }
+// };
 
 /**
  *  Sign in the user upon button click.
@@ -63,7 +68,9 @@ const updateSigninStatus = isSignedIn => {
 export const handleAuthClick = event => {
   gapi.auth2
     .getAuthInstance()
-    .signIn();
+    .signIn()
+    .catch(err => console.log("auth,", err))
+    .then(res => console.log("auth.", res));
 };
 
 /**
@@ -90,8 +97,8 @@ const appendPre = message => {
  * the authorized user's calendar. If no events are found an
  * appropriate message is printed.
  */
-const listUpcomingEvents = () => {
-  gapi.client.calendar.events
+export const listUpcomingEvents = async () => {
+  return gapi.client.calendar.events
     .list({
       calendarId: "primary",
       timeMin: new Date().toISOString(),
@@ -101,34 +108,37 @@ const listUpcomingEvents = () => {
       orderBy: "startTime"
     })
     .then(res => {
-      console.log(res.result)
       const events = res.result.items;
-      appendPre("Upcoming events:");
 
       if (events.length > 0) {
+        const eventTimes = [];
         for (let i = 0; i < events.length; i++) {
           const event = events[i];
-          let startDateTime = event.start.dateTime;
-          let endDateTime = event.end.dateTime;
-          let month, day, hour, min;
-          if (startDateTime) {
-            month = startDateTime.substr(5, 2);
-            day = startDateTime.substr(8, 2);
-            hour = startDateTime.substr(11, 2);
-            min = startDateTime.substr(14, 2);
+          let startDateTime = new Date(event.start.dateTime);
+          let endDateTime = new Date(event.end.dateTime);
+          if (event.start.dateTime) {
+            let month, day, hour, min;
+            month = startDateTime.getMonth() + 1;
+            day = startDateTime.getDate();
+            hour = startDateTime.getHours();
+            min = startDateTime.getMinutes();
             startDateTime = `${month}/${day} ${hour}:${min}`;
-            month = endDateTime.substr(5, 2);
-            day = endDateTime.substr(8, 2);
-            hour = endDateTime.substr(11, 2);
-            min = endDateTime.substr(14, 2);
+            month = endDateTime.getMonth() + 1;
+            day = endDateTime.getDate();
+            hour = endDateTime.getHours();
+            min = endDateTime.getMinutes();
             endDateTime = `${month}/${day} ${hour}:${min}`;
-            appendPre(event.summary + " ( " + startDateTime + " ~ " + endDateTime + " )");
-          } else {
-            startDateTime = event.start.date;
+            appendPre(
+              event.summary + " ( " + startDateTime + " ~ " + endDateTime + " )"
+            );
+            eventTimes.push({ start: new Date(event.start.dateTime), end: new Date(event.end.dateTime) });
           }
         }
+        console.log("んえ", eventTimes);
+        return eventTimes;
       } else {
         appendPre("No upcoming events found.");
+        return [];
       }
     });
 };
