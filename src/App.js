@@ -67,8 +67,8 @@ class CalendarInput extends Component {
   /**
    * startTime と endTime から、予約可能なフレームを用意する
    * @param {number} n : n分を1フレームとする
-   * @param {date} startTime : 時刻をみるために date 型
-   * @param {date} endTime : 時刻をみるために date 型
+   * @param {datetime} startTime : 時刻をみるために datetime 型
+   * @param {datetime} endTime : 時刻をみるために datetime 型
    */
   getAvailableTimeFrames(n, startTime, endTime) {
     const frames = [];
@@ -87,18 +87,17 @@ class CalendarInput extends Component {
       <Table className="table">
         <thead>
           <tr>
-            {days.map((day, index) => (
-              <th scope="col">{`${day.getMonth() + 1}/${day.getDate()} ${
-                daysOfWeek[day.getDay()]
-              }`}</th>
+            {days.map((d, index) => (
+              <th key={index} scope="col">{`${d.getMonth() +
+                1}/${d.getDate()} ${daysOfWeek[d.getDay()]}`}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {frames.map((f, frameIndex) => (
-            <tr>
-              {days.map((day, dayIndex) => (
-                <td>{`${f.start.getHours()}:${
+            <tr key={frameIndex}>
+              {days.map((d, dayIndex) => (
+                <td key={dayIndex}>{`${f.start.getHours()}:${
                   f.start.getMinutes() ? f.start.getMinutes() : "00"
                 } -`}</td>
               ))}
