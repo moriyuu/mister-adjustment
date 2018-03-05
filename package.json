@@ -1,7 +1,7 @@
 {
   "name": "mister-adjustment",
   "version": "0.1.0",
-  "homepage": "https://moriyuu.github.io/mister-adjustment/",
+  "homepage": "https://moriyuu.github.io/mr-a",
   "private": true,
   "dependencies": {
     "gapi-client": "0.0.3",
