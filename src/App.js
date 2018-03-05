@@ -25,11 +25,17 @@ const Jumbotron = styled.div`
   background-color: ${StyleVariables.color.gray.light};
 `;
 const StyledTd = styled.td`
-  ${props => !props.isAvailable && `background-color: gray;`};
-  &:hover {
-    background-color: #e3e2e1;
-    cursor: pointer;
-  }
+  ${props =>
+    props.isAvailable
+      ? `
+    &:hover {
+      background-color: #e3e2e1;
+      cursor: pointer;
+    }`
+      : `
+    opacity: 0.25;
+    background-color:#ccc;
+    `};
 `;
 
 const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
