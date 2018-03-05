@@ -28,11 +28,17 @@ const Jumbotron = styled.div`
 const StyledTd = styled.td`
   ${props =>
     props.isAvailable
-      ? `
-    &:hover {
-      background-color: #e3e2e1;
-      cursor: pointer;
-    }`
+      ? props.isSelected
+        ? `
+          background-color: ${StyleVariables.color.orange.veryLight};
+          color: #fff;
+        `
+        : `
+      &:hover {
+        background-color: rgba(255, 101, 84, 0.33);
+        cursor: pointer;
+      }      
+      `
       : `
     opacity: 0.25;
     background-color:#ccc;
@@ -50,7 +56,8 @@ class CalendarInput extends Component {
           day: 0,
           frames: [{ start: new Date(), end: new Date(), isAvailable: true }]
         }
-      ]
+      ],
+      selectedFrames: []
     };
     this.getRecentDaysWithFrames = this.getRecentDaysWithFrames.bind(this);
     this.getAvailableTimeFramesBySetting = this.getAvailableTimeFramesBySetting.bind(
@@ -59,6 +66,7 @@ class CalendarInput extends Component {
     this.getAvailableTimeFramesByCal = this.getAvailableTimeFramesByCal.bind(
       this
     );
+    this.selectFrame = this.selectFrame.bind(this);
   }
 
   componentDidMount() {
@@ -131,8 +139,42 @@ class CalendarInput extends Component {
     this.setState({ days });
   }
 
+  /**
+   * 予約する frame を選択/選択解除する
+   * @param {object} frame : 選択する frame 
+   */
+  selectFrame(frame) {
+    if (!frame.isAvailable) return;
+
+    const { selectedFrames } = this.state;
+    const frameIndex = this.findFrameInArr(frame, selectedFrames);
+    if (frameIndex >= 0) {
+      selectedFrames.splice(frameIndex, 1);
+    } else {
+      selectedFrames.push(frame);
+    }
+    console.log(selectedFrames);
+    this.setState({ selectedFrames });
+  }
+
+  /**
+   * frame の配列の中からある frame を探してその index を返す
+   * @param {object} frame : 探す frame
+   * @param {array} arr : この中から frame を探す
+   */
+  findFrameInArr(frame, arr) {
+    let frameIndex = -1;
+    arr.some((el, index) => {
+      if (frame.start === el.start) {
+        frameIndex = index;
+        return true;
+      }
+    });
+    return frameIndex;
+  }
+
   render() {
-    const { days } = this.state;
+    const { days, selectedFrames } = this.state;
 
     const FrameTds = props => {
       const startTime = new Date(days[0].frames[props.index].start);
@@ -140,7 +182,10 @@ class CalendarInput extends Component {
         <StyledTd
           key={index}
           isAvailable={d.frames[props.index].isAvailable}
-          className={d.frames[props.index].isAvailable.toString()}
+          isSelected={
+            this.findFrameInArr(d.frames[props.index], selectedFrames) >= 0
+          }
+          onClick={() => this.selectFrame(d.frames[props.index])}
         >
           {startTime.getHours()}:{startTime.getMinutes() || "00"} -
         </StyledTd>
@@ -148,26 +193,34 @@ class CalendarInput extends Component {
     };
 
     return (
-      <table className="table table-sm" style={{ tableLayout: "fixed" }}>
-        <thead>
-          <tr>
-            {days.map((d, index) => (
-              <th key={index} scope="col">
-                {new Date(d.day).getMonth() + 1}/
-                {new Date(d.day).getDate()}{" "}
-                {daysOfWeek[new Date(d.day).getDay()]}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {days[0].frames.map((f, index) => (
-            <tr key={index}>
-              <FrameTds index={index} />
+      <div
+        style={{
+          padding: "20px 30px 0",
+          border: "8px solid #dee2e6",
+          borderRadius: "3px"
+        }}
+      >
+        <table className="table table-sm" style={{ tableLayout: "fixed" }}>
+          <thead>
+            <tr>
+              {days.map((d, index) => (
+                <th key={index} scope="col">
+                  {new Date(d.day).getMonth() + 1}/
+                  {new Date(d.day).getDate()}{" "}
+                  {daysOfWeek[new Date(d.day).getDay()]}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {days[0].frames.map((f, index) => (
+              <tr key={index}>
+                <FrameTds index={index} />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   }
 }
