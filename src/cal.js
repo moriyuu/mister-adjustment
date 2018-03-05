@@ -131,10 +131,12 @@ export const listUpcomingEvents = async () => {
             appendPre(
               event.summary + " ( " + startDateTime + " ~ " + endDateTime + " )"
             );
-            eventTimes.push({ start: new Date(event.start.dateTime), end: new Date(event.end.dateTime) });
+            eventTimes.push({
+              start: new Date(event.start.dateTime),
+              end: new Date(event.end.dateTime)
+            });
           }
         }
-        console.log("んえ", eventTimes);
         return eventTimes;
       } else {
         appendPre("No upcoming events found.");

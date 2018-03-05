@@ -39,76 +39,118 @@ class CalendarInput extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      days: [],
-      frames: [{ start: new Date(), end: new Date() }]
+      days: [
+        {
+          day: 0,
+          frames: [{ start: new Date(), end: new Date(), isAvailable: true }]
+        }
+      ]
     };
-    this.getRecentDays = this.getRecentDays.bind(this);
-    this.getAvailableTimeFrames = this.getAvailableTimeFrames.bind(this);
+    this.getRecentDaysWithFrames = this.getRecentDaysWithFrames.bind(this);
+    this.getAvailableTimeFramesBySetting = this.getAvailableTimeFramesBySetting.bind(
+      this
+    );
+    this.getAvailableTimeFramesByCal = this.getAvailableTimeFramesByCal.bind(
+      this
+    );
   }
 
   componentDidMount() {
-    this.getRecentDays();
-    this.getAvailableTimeFrames(
-      30,
-      new Date(new Date(new Date().setHours(10)).setMinutes(0)),
-      new Date(new Date(new Date().setHours(20)).setMinutes(30))
-    );
+    this.getRecentDaysWithFrames();
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { events } = this.props;
+    // console.log("events", prevProps);
+    if (prevProps.events.length === 0 && events.length !== 0) {
+      // this.getAvailableTimeFramesByCal(events);
+    }
   }
 
   /**
    * 明日からの n 日ぶんを取得して days に突っ込む
    * @param {number} n : 直近の日をn日ぶん
    */
-  getRecentDays(n = 7) {
+  getRecentDaysWithFrames(n = 7) {
     const days = [];
     for (let i = 0; i < n; i++) {
       const now = new Date();
-      const day = new Date(now.setDate(now.getDate() + (i + 1)));
-      days.push(day);
-      // console.log(day.getMonth()+1 + "/" + day.getDate());
+      const day = now.setDate(now.getDate() + i + 1);
+      const frames = this.getAvailableTimeFramesBySetting(
+        30,
+        new Date(day).setHours(10, 0),
+        new Date(day).setHours(19, 30)
+      );
+
+      days.push({ day, frames });
     }
     this.setState({ days });
   }
 
   /**
-   * startTime と endTime から、予約可能なフレームを用意する
-   * @param {number} n : n分を1フレームとする
-   * @param {datetime} startTime : 時刻をみるために datetime 型
-   * @param {datetime} endTime : 時刻をみるために datetime 型
+   *
+   * @param {number} n : n 分を1フレームとする
+   * @param {number} startTime : 設定された予約可能開始時刻
+   * @param {number} endTime : 設定された予約可能終了時刻
    */
-  getAvailableTimeFrames(n, startTime, endTime) {
-    const frames = [];
-    while (startTime < endTime) {
-      frames.push({
-        start: new Date(startTime.getTime()),
-        end: new Date(startTime.setMinutes(startTime.getMinutes() + n))
-      });
+  getAvailableTimeFramesBySetting(n, startTime, endTime) {
+    let frames = [];
+    let start = new Date(startTime); // date
+    while (start < endTime) {
+      const frame = {
+        start: start.getTime(), // number
+        end: start.setMinutes(start.getMinutes() + n), // number
+        isAvailable: true
+      };
+      frames.push(frame);
+      start = new Date(frame.end); // date
     }
-    this.setState({ frames });
+    return frames;
+  }
+
+  getAvailableTimeFramesByCal(events) {
+    const { days } = this.state;
+    days.forEach((d, index) => {
+      d.frames.forEach((f, index) => {
+        events.forEach((e, index) => {
+          if (!(e.end <= f.start || f.end <= e.start)) {
+            f.isAvailable = false;
+            console.log("false", f);
+          }
+        });
+      });
+    });
+    this.setState({ days });
   }
 
   render() {
-    const { days, frames } = this.state;
+    const { days } = this.state;
+    console.log("days", days);
     return (
       <Table className="table table-sm">
         <thead>
           <tr>
-            {days.map((d, index) => (
-              <th key={index} scope="col">{`${d.getMonth() +
-                1}/${d.getDate()} ${daysOfWeek[d.getDay()]}`}</th>
-            ))}
+            {/* {days.map((d, index) => (
+              <th key={index} scope="col">{`${d.day.getMonth() +
+                1}/${d.day.getDate()} ${daysOfWeek[d.day.getDay()]}`}</th>
+            ))} */}
           </tr>
         </thead>
         <tbody>
-          {frames.map((f, frameIndex) => (
+          {/* {days.map((d, frameIndex) => {
             <tr key={frameIndex}>
-              {days.map((d, dayIndex) => (
-                <td key={dayIndex}>{`${f.start.getHours()}:${
-                  f.start.getMinutes() ? f.start.getMinutes() : "00"
-                } -`}</td>
-              ))}
+              days.map((d, dayIndex) => (
+              <td key={dayIndex}>{`${f.start.getHours()}:${
+                f.start.getMinutes() ? f.start.getMinutes() : "00"
+              } -`}</td>
+              ));
+            </tr>;
+          })} */}
+          {/* {days[0].frames.map((f, i) => (
+            <tr>
+              {days.map((d, dayIndex) => <td>{d[dayIndex].frames[i]}</td>)}
             </tr>
-          ))}
+          ))} */}
         </tbody>
       </Table>
     );
@@ -120,10 +162,7 @@ class App extends Component {
     super(props);
     this.state = { isSignedIn: false, events: [] };
 
-    handleClientLoad(obj => {
-      console.log("setstateしちゃうよ", obj);
-      this.setState(obj);
-    });
+    handleClientLoad(obj => this.setState(obj));
   }
 
   async componentDidUpdate() {
@@ -134,7 +173,7 @@ class App extends Component {
   }
 
   render() {
-    const { isSignedIn } = this.state;
+    const { isSignedIn, events } = this.state;
     return (
       <AppStyledDiv className="App">
         <Nav className="navbar sticky-top navbar-light bg-light">
@@ -182,7 +221,7 @@ class App extends Component {
           }}
         />
         <div className="container">
-          <CalendarInput />
+          <CalendarInput events={events} />
         </div>
       </AppStyledDiv>
     );
