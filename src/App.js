@@ -69,7 +69,7 @@ class CalendarInput extends Component {
 
   /**
    * 明日からの n 日ぶんを取得して days に突っ込む
-   * @param {number} n : 直近の日をn日ぶん
+   * @param {number} n : 直近の日を n 日ぶん
    */
   getRecentDaysWithFrames(n = 7) {
     const days = [];
@@ -125,32 +125,36 @@ class CalendarInput extends Component {
 
   render() {
     const { days } = this.state;
-    console.log("days", days);
+
+    const FrameTds = props => {
+      const startTime = new Date(days[0].frames[props.index].start);
+      return days.map((d, index) => (
+        <td key={index}>
+          {startTime.getHours()}:{startTime.getMinutes() || "00"}-
+        </td>
+      ));
+    };
+
     return (
       <Table className="table table-sm">
         <thead>
           <tr>
-            {/* {days.map((d, index) => (
-              <th key={index} scope="col">{`${d.day.getMonth() +
-                1}/${d.day.getDate()} ${daysOfWeek[d.day.getDay()]}`}</th>
-            ))} */}
+            {days.map((d, index) => (
+              <th key={index} scope="col">
+                {new Date(d.day).getMonth() + 1}
+                {"/"}
+                {new Date(d.day).getDate()}{" "}
+                {daysOfWeek[new Date(d.day).getDay()]}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {/* {days.map((d, frameIndex) => {
-            <tr key={frameIndex}>
-              days.map((d, dayIndex) => (
-              <td key={dayIndex}>{`${f.start.getHours()}:${
-                f.start.getMinutes() ? f.start.getMinutes() : "00"
-              } -`}</td>
-              ));
-            </tr>;
-          })} */}
-          {/* {days[0].frames.map((f, i) => (
-            <tr>
-              {days.map((d, dayIndex) => <td>{d[dayIndex].frames[i]}</td>)}
+          {days[0].frames.map((f, index) => (
+            <tr key={index}>
+              <FrameTds index={index} />
             </tr>
-          ))} */}
+          ))}
         </tbody>
       </Table>
     );
