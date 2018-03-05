@@ -13,9 +13,10 @@ import {
 } from "./cal";
 
 const Nav = styled.nav`
-  background-color: rgba(255, 67, 48, 0.88) !important;
+  // background-color: rgba(255, 67, 48, 0.88) !important;
+  box-shadow: rgba(19, 26, 36, 0.2) 0px 4px 8px 0px;
   a {
-    color: #fff !important;
+    color: rgba(255, 67, 48, 0.88) !important;
     &.navbar-brand {
       font-weight: 800 !important;
     }
@@ -92,7 +93,7 @@ class CalendarInput extends Component {
   }
 
   /**
-   *
+   * 設定された予約可能時間を元に frames を生成して返す
    * @param {number} n : n 分を1フレームとする
    * @param {number} startTime : 設定された予約可能開始時刻
    * @param {number} endTime : 設定された予約可能終了時刻
@@ -112,6 +113,10 @@ class CalendarInput extends Component {
     return frames;
   }
 
+  /**
+   * カレンダーの予定と時間の被っている frame を unavailable にする
+   * @param {array} events : 予定イベントの入った配列
+   */
   getAvailableTimeFramesByCal(events) {
     const { days } = this.state;
     days.forEach((d, index) => {
@@ -119,7 +124,6 @@ class CalendarInput extends Component {
         events.forEach((e, index) => {
           if (!(f.end <= e.start || e.end <= f.start)) {
             f.isAvailable = false;
-            console.log("false", f);
           }
         });
       });
@@ -129,7 +133,6 @@ class CalendarInput extends Component {
 
   render() {
     const { days } = this.state;
-    console.log("でいず", days);
 
     const FrameTds = props => {
       const startTime = new Date(days[0].frames[props.index].start);
@@ -145,7 +148,7 @@ class CalendarInput extends Component {
     };
 
     return (
-      <table className="table table-sm">
+      <table className="table table-sm" style={{ tableLayout: "fixed" }}>
         <thead>
           <tr>
             {days.map((d, index) => (
