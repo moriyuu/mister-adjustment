@@ -24,12 +24,11 @@ const Nav = styled.nav`
 const Jumbotron = styled.div`
   background-color: ${StyleVariables.color.gray.light};
 `;
-const Table = styled.table`
-  td {
-    &:hover {
-      background-color: #e3e2e1;
-      cursor: pointer;
-    }
+const StyledTd = styled.td`
+  ${props => !props.isAvailable && `background-color: gray;`};
+  &:hover {
+    background-color: #e3e2e1;
+    cursor: pointer;
   }
 `;
 
@@ -61,9 +60,8 @@ class CalendarInput extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     const { events } = this.props;
-    // console.log("events", prevProps);
     if (prevProps.events.length === 0 && events.length !== 0) {
-      // this.getAvailableTimeFramesByCal(events);
+      this.getAvailableTimeFramesByCal(events);
     }
   }
 
@@ -74,7 +72,7 @@ class CalendarInput extends Component {
   getRecentDaysWithFrames(n = 7) {
     const days = [];
     for (let i = 0; i < n; i++) {
-      const now = new Date();
+      const now = new Date(new Date().setSeconds(0, 0));
       const day = now.setDate(now.getDate() + i + 1);
       const frames = this.getAvailableTimeFramesBySetting(
         30,
@@ -113,7 +111,7 @@ class CalendarInput extends Component {
     days.forEach((d, index) => {
       d.frames.forEach((f, index) => {
         events.forEach((e, index) => {
-          if (!(e.end <= f.start || f.end <= e.start)) {
+          if (!(f.end <= e.start || e.end <= f.start)) {
             f.isAvailable = false;
             console.log("false", f);
           }
@@ -125,24 +123,28 @@ class CalendarInput extends Component {
 
   render() {
     const { days } = this.state;
+    console.log("でいず", days);
 
     const FrameTds = props => {
       const startTime = new Date(days[0].frames[props.index].start);
       return days.map((d, index) => (
-        <td key={index}>
-          {startTime.getHours()}:{startTime.getMinutes() || "00"}-
-        </td>
+        <StyledTd
+          key={index}
+          isAvailable={d.frames[props.index].isAvailable}
+          className={d.frames[props.index].isAvailable.toString()}
+        >
+          {startTime.getHours()}:{startTime.getMinutes() || "00"} -
+        </StyledTd>
       ));
     };
 
     return (
-      <Table className="table table-sm">
+      <table className="table table-sm">
         <thead>
           <tr>
             {days.map((d, index) => (
               <th key={index} scope="col">
-                {new Date(d.day).getMonth() + 1}
-                {"/"}
+                {new Date(d.day).getMonth() + 1}/
                 {new Date(d.day).getDate()}{" "}
                 {daysOfWeek[new Date(d.day).getDay()]}
               </th>
@@ -156,7 +158,7 @@ class CalendarInput extends Component {
             </tr>
           ))}
         </tbody>
-      </Table>
+      </table>
     );
   }
 }

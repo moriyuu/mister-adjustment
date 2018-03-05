@@ -104,7 +104,7 @@ export const listUpcomingEvents = async () => {
       timeMin: new Date().toISOString(),
       showDeleted: false,
       singleEvents: true,
-      maxResults: 10,
+      maxResults: 20,
       orderBy: "startTime"
     })
     .then(res => {
