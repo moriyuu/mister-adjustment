@@ -1,6 +1,7 @@
 {
   "name": "mister-adjustment",
   "version": "0.1.0",
+  "homepage": "https://moriyuu.github.io/mr-a",
   "private": true,
   "dependencies": {
     "gapi-client": "0.0.3",
@@ -11,7 +12,11 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "deploy": "npm run build && gh-pages -d build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "gh-pages": "^1.1.0"
   }
 }
